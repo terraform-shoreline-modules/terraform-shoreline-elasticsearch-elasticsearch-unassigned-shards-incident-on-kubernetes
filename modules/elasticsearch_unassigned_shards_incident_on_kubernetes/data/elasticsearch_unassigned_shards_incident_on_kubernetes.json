@@ -1,0 +1,166 @@
+{
+  "name": "elasticsearch_unassigned_shards_incident_on_kubernetes",
+  "description": "This incident type refers to a situation where Elasticsearch has unassigned shards. Shards are the basic building blocks of Elasticsearch indexes, and they contain the actual data that is stored in Elasticsearch. When a shard is unassigned, it means that Elasticsearch cannot find a node in the cluster that can hold the shard replicas. This can cause data loss and reduce the performance of the Elasticsearch cluster. Therefore, it is important to address this incident as soon as possible to prevent any potential data loss and maintain the optimal performance of the Elasticsearch cluster.",
+  "params": [
+    {
+      "name": "ELASTICSEARCH_POD_NAME",
+      "value": ""
+    },
+    {
+      "name": "ELASTICSEARCH_APP",
+      "value": ""
+    },
+    {
+      "name": "ELASTICSEARCH_DEPLOYMENT",
+      "value": ""
+    },
+    {
+      "name": "ELASTICSEARCH_NAMESPACE",
+      "value": ""
+    },
+    {
+      "name": "ELASTICSEARCH_SERVICE",
+      "value": ""
+    },
+    {
+      "name": "NUMBER_OF_REPLICAS",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Elasticsearch unassigned shards incident on Kubernetes\nThis incident type refers to a situation where Elasticsearch has unassigned shards. Shards are the basic building blocks of Elasticsearch indexes, and they contain the actual data that is stored in Elasticsearch. When a shard is unassigned, it means that Elasticsearch cannot find a node in the cluster that can hold the shard replicas. This can cause data loss and reduce the performance of the Elasticsearch cluster. Therefore, it is important to address this incident as soon as possible to prevent any potential data loss and maintain the optimal performance of the Elasticsearch cluster."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Elasticsearch pods are running"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get pods -n ${ELASTICSEARCH_NAMESPACE} -l app=${ELASTICSEARCH_APP}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Elasticsearch service is running"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get svc -n ${ELASTICSEARCH_NAMESPACE} ${ELASTICSEARCH_SERVICE}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Elasticsearch deployment is running"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get deployment -n ${ELASTICSEARCH_NAMESPACE} ${ELASTICSEARCH_DEPLOYMENT}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Elasticsearch nodes are healthy"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | `kubectl exec -it ${ELASTICSEARCH_POD_NAME} -n ${ELASTICSEARCH_NAMESPACE} curl -XGET 'http://localhost:9200/_cat/nodes?v'`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Elasticsearch shards are assigned"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | `kubectl exec -it ${ELASTICSEARCH_POD_NAME} -n ${ELASTICSEARCH_NAMESPACE} curl -XGET 'http://localhost:9200/_cat/shards?v'`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Kubernetes nodes have enough resources"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get nodes --show-labels`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if there are any pod evictions or disruptions"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get events -n ${ELASTICSEARCH_NAMESPACE}`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if there are any Elasticsearch logs related to unassigned shards"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl logs -f ${ELASTICSEARCH_POD_NAME} -n ${ELASTICSEARCH_NAMESPACE} | grep \"unassigned\"`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The Elasticsearch cluster may have insufficient resources such as CPU, memory, or storage space, leading to unassigned shards."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_es_pod_usage_monitor($ELASTICSEARCH_POD_NAME, $ELASTICSEARCH_NAMESPACE, $NAMESPACE)"
+    },
+    {
+      "name": "cell_20",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Scale the Elasticsearch deployment to add more pods"
+    },
+    {
+      "name": "cell_21",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_scale_deployment($ELASTICSEARCH_DEPLOYMENT, $NUMBER_OF_REPLICAS, $NAMESPACE)"
+    }
+  ]
+}
